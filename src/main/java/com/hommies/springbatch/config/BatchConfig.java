@@ -2,6 +2,7 @@ package com.hommies.springbatch.config;
 
 
 import com.hommies.springbatch.model.Student;
+import com.hommies.springbatch.repository.FileDetailRepository;
 import com.hommies.springbatch.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
@@ -15,6 +16,7 @@ import org.springframework.batch.item.file.LineMapper;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
@@ -26,14 +28,18 @@ import org.springframework.transaction.PlatformTransactionManager;
 @RequiredArgsConstructor
 public class BatchConfig {
 
+    @Value("${file-path}")
+    private  String filePathInAppSettings;
+
     private final StudentRepository repository;
     private final JobRepository jobRepository;
+//    private final FileDetailRepository fileDetailRepository;
     private final PlatformTransactionManager platformTransactionManager;
 
     @Bean
     public FlatFileItemReader<Student> itemReader(){
         FlatFileItemReader<Student> item = new FlatFileItemReader<>();
-        item.setResource(new FileSystemResource("C:\\Users\\HP\\IdeaProjects\\spring-batch\\src\\main\\resources\\student.csv"));
+        item.setResource(new FileSystemResource( filePathInAppSettings ));
         item.setLinesToSkip(1);
         item.setName("csvReader");
         item.setLineMapper(lineMapper());
@@ -58,7 +64,7 @@ public class BatchConfig {
     }
 
     @Bean
-    public Step importStep(){
+    public Step importStep() {
         return new StepBuilder("csvImport", jobRepository)
                 .<Student, Student>chunk(1000, platformTransactionManager)
                 .reader(itemReader())
